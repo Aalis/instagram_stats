@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "users.apps.UsersConfig",
+    "inst_profiles",
+    "inst_history",
 ]
 
 MIDDLEWARE = [
@@ -50,7 +52,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = "django_project.urls"
+ROOT_URLCONF = "instagram_stats.urls"
 
 TEMPLATES = [
     {
@@ -68,7 +70,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "django_project.wsgi.application"
+WSGI_APPLICATION = "instagram_stats.wsgi.application"
 
 
 # Database
@@ -76,8 +78,12 @@ WSGI_APPLICATION = "django_project.wsgi.application"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "instagram_stats",
+        "USER": "aalis",
+        "PASSWORD": "finger1992",
+        "HOST": "localhost",  # Set to the PostgreSQL server's address
+        "PORT": "5432",  # Set to the PostgreSQL server's port
     }
 }
 
@@ -120,6 +126,14 @@ STATIC_URL = "static/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
+
+
+# Define the base directory where media files will be stored.
+MEDIA_ROOT = BASE_DIR / "media"
+
+# Define the URL for serving media files.
+MEDIA_URL = "/media/"
+
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
