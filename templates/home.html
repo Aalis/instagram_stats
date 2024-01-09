@@ -3,14 +3,26 @@
 
 {% block content %}
 {% if user.is_authenticated %}
-<h2>Hi, {{user.username}}!</h2>
-<form method="post" action="{% url "logout" %}">
-    {% csrf_token %}
-    <button type="submit">Log Out</button>
-</form>
+    <h2>Hi, {{user.username}}!</h2>
+
+    <form method="post" action="{% url "logout" %}">
+        {% csrf_token %}
+        <button type="submit">Log Out</button>
+    </form>
+
+    <a href="{% url 'add_instprofile' %}">
+        <button>Add Instprofiles</button>
+    </a>
+    <a href="{% url 'instprofile_list' %}">
+        <button>View Instprofiles</button>
+    </a>
+    
 {% else %}
     <p>You are not logged in</p>
     <a href="{% url "login" %}">Log In</a>
     <a href="{% url "signup" %}">Sign Up</a>
 {% endif %}
 {% endblock content %}
+
+
+
