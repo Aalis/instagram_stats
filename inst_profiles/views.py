@@ -1,14 +1,17 @@
 from django.shortcuts import render, redirect
 from .models import InstProfile
 from .forms import InstProfileForm
+from .tasks import example_task
 
 
 def add_instprofile(request):
+    example_task()
     if request.method == "POST":
         form = InstProfileForm(request.POST)
         if form.is_valid():
             form.save()
             return redirect("instprofile_list")
+
     else:
         form = InstProfileForm()
     return render(request, "add_instprofile.html", {"form": form})
