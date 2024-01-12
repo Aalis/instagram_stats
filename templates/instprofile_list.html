@@ -1,0 +1,24 @@
+
+{% extends "base.html" %}
+{% block title %}Instagram Profiles{% endblock title %}
+
+{% block content %}
+    {% if request.user.is_authenticated %}
+        <h2>Hi, {{ request.user.username }}!</h2>
+        <form method="post" action="{% url "logout" %}">
+            {% csrf_token %}
+            <button type="submit">Log Out</button>
+        </form>
+        <h2>Instagram Profiles List</h2>
+        <ul>
+            {% for profile in object_list %}
+                <li>{{ profile.name }} - {{ profile.link }} - Followers: {{ profile.followers_count }}</li>
+            {% endfor %}
+        </ul>
+
+    {% else %}
+        <p>You are not logged in</p>
+        <a href="{% url "login" %}">Log In</a>
+        <a href="{% url "signup" %}">Sign Up</a>
+    {% endif %}
+{% endblock content %}
