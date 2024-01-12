@@ -1,7 +1,7 @@
-from .views import add_instprofile, instprofile_list
 from django.urls import path
+from .views import InstProfileListView, InstProfileCreateView
 
 urlpatterns = [
-    path("add/", add_instprofile, name="add_instprofile"),
-    path("list/", instprofile_list, name="instprofile_list"),
+    path("", InstProfileListView.as_view(), name="instprofile_list"),
+    path("add/", InstProfileCreateView.as_view(), name="add_instprofile"),
 ]
