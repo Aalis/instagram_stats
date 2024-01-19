@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import os
 from dotenv import load_dotenv
+from datetime import timedelta
+
 
 load_dotenv()  # Load environment variables from .env
 
@@ -43,6 +45,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "users.apps.UsersConfig",
+    "django_celery_beat",
     "inst_profiles",
     "inst_history",
 ]
@@ -157,3 +160,10 @@ CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "UTC"
+
+CELERY_BEAT_SCHEDULE = {
+    "update_followers_count": {
+        "task": "inst_profiles.tasks.update_followers_count",
+        "schedule": timedelta(minutes=5),  # Run every 24 hours
+    },
+}

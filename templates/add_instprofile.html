@@ -1,7 +1,47 @@
 {% extends "base.html" %}
+
+{% block title %}Add Instagram Profile{% endblock title %}
+
 {% block content %}
-    <h1>Add Instagram Profile</h1>
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %} {{ form.as_p }} <button type="submit">Add Profile</button>
-    </form>
+    <div class="container mt-4">
+        {% if request.user.is_authenticated %}
+            <h1 class="mb-4">Add Instagram Profile</h1>
+            
+            <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <div class="row mb-3">
+                    <div class="col-md-2">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">Name</label>
+                    </div>
+                    <div class="col-md-10">
+                        {{ form.name }}
+                        <div class="invalid-feedback">
+                            Please enter a valid name.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-2">
+                        <label for="{{ form.link.id_for_label }}" class="form-label">Link</label>
+                    </div>
+                    <div class="col-md-10">
+                        {{ form.link }}
+                        <div class="invalid-feedback">
+                            Please enter a valid link.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add more form fields as needed -->
+
+                <button type="submit" class="btn btn-primary">Add Profile</button>
+            </form>
+        {% else %}
+            <p class="mb-4">You must be logged in to see this page</p>
+            <a href="{% url 'login' %}" class="btn btn-primary">Log In</a>
+            <a href="{% url 'signup' %}" class="btn btn-success">Sign Up</a>
+        {% endif %}
+    </div>
 {% endblock content %}
