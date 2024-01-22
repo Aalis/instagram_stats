@@ -164,6 +164,8 @@ CELERY_TIMEZONE = "UTC"
 CELERY_BEAT_SCHEDULE = {
     "update_followers_count": {
         "task": "inst_profiles.tasks.update_followers_count",
-        "schedule": timedelta(minutes=5),  # Run every 24 hours
+        "schedule": timedelta(minutes=2),  # Run every 24 hours
     },
 }
+# CSRF_COOKIE_SECURE = True  # Set this to True if using HTTPS
+# CSRF_COOKIE_SAMESITE = None  # Set this to None for SameSite=None
