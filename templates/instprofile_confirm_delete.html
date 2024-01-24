@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2>Confirm Deletion</h2>
+  <p>Are you sure you want to delete the profile "{{ object }}"?</p>
+
+  <form method="post" action="{% url 'delete_instprofile' pk=object.pk %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+    <a href="{% url 'instprofile_list' %}" class="btn btn-secondary btn-sm">Cancel</a>
+  </form>
+{% endblock %}
