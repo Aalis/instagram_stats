@@ -1,4 +1,3 @@
-from decouple import config
 from celery import shared_task
 from selenium import webdriver
 from chromedriver_autoinstaller import install as install_chromedriver
@@ -16,81 +15,91 @@ from selenium.common.exceptions import TimeoutException
 import time
 import random
 from celery.utils.log import get_task_logger
+from decouple import config
 
 logger = get_task_logger(__name__)
 
 
-def login_to_instagram(driver):
-    username = config("INSTAGRAM_USERNAME")
-    password = config("INSTAGRAM_PASSWORD")
+class ChromeDriverManager:
+    def __enter__(self):
+        self.chrome_driver = None
+        return self
 
-    try:
-        # Navigate to Instagram login page
-        driver.get("https://www.instagram.com/accounts/login/")
+    def __exit__(self, exc_type, exc_value, traceback):
+        if self.chrome_driver:
+            self.chrome_driver.quit()
 
-        # Wait for the login form to load
-        WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.NAME, "username"))
-        )
+    def initialize_chrome_driver(self, user_agent=None):
+        if self.chrome_driver is None:
+            driver_path = install_chromedriver()
+            chrome_options = ChromeOptions()
+            # chrome_options.add_argument("--headless")  # Run in headless mode
+            if user_agent:
+                chrome_options.add_argument(f"user-agent={user_agent}")
+            self.chrome_driver = webdriver.Chrome(options=chrome_options)
+        return self.chrome_driver
 
-        # Find username and password fields and enter credentials
-        username_input = driver.find_element(By.NAME, "username")
-        password_input = driver.find_element(By.NAME, "password")
+    def rotate_user_agent(self, user_agents):
+        return random.choice(user_agents)
 
-        username_input.send_keys(username)
-        password_input.send_keys(password)
+    def login_to_instagram(self, username, password):
+        try:
+            self.chrome_driver.get("https://www.instagram.com/accounts/login/")
 
-        # Submit the login form
-        password_input.send_keys(Keys.RETURN)
+            WebDriverWait(self.chrome_driver, 10).until(
+                EC.presence_of_element_located((By.NAME, "username"))
+            )
 
-        # Wait for the login process to complete
-        WebDriverWait(driver, 10).until(
-            EC.url_changes("https://www.instagram.com/accounts/login/")
-        )
+            username_input = self.chrome_driver.find_element(By.NAME, "username")
+            password_input = self.chrome_driver.find_element(By.NAME, "password")
 
-        logger.info("Successfully logged in.")
-    except TimeoutException:
-        logger.error("Login failed. Timeout.")
-        raise
+            username_input.send_keys(username)
+            password_input.send_keys(password)
 
+            password_input.send_keys(Keys.RETURN)
 
-def initialize_chrome_driver(user_agent=None):
-    driver_path = install_chromedriver()
-    chrome_options = ChromeOptions()
-    # chrome_options.add_argument("--headless")  # Run in headless mode
-    if user_agent:
-        chrome_options.add_argument(f"user-agent={user_agent}")
+            WebDriverWait(self.chrome_driver, 10).until(
+                EC.url_changes("https://www.instagram.com/accounts/login/")
+            )
 
-    return webdriver.Chrome(options=chrome_options)
-
-
-def rotate_user_agent(user_agents):
-    return random.choice(user_agents)
+            logger.info("Successfully logged in.")
+        except TimeoutException:
+            logger.error("Login failed. Timeout.")
+            raise
 
 
 @shared_task
 def get_followers_count(profile_url):
-    chrome_driver = initialize_chrome_driver()
     try:
-        login_to_instagram(chrome_driver)
+        username = config("INSTAGRAM_USERNAME")
+        password = config("INSTAGRAM_PASSWORD")
 
-        with chrome_driver:
+        with ChromeDriverManager() as manager:
+            chrome_driver = manager.initialize_chrome_driver()
+            manager.login_to_instagram(username, password)
+
             chrome_driver.get(profile_url)
+
             WebDriverWait(chrome_driver, 10).until(
                 EC.presence_of_element_located((By.CLASS_NAME, "_acan"))
             )
+
             soup = BeautifulSoup(chrome_driver.page_source, "lxml")
             root = html.fromstring(str(soup))
             followers_count = root.xpath('//span[@class="_ac2a"]/@title')[0]
             followers_count_numeric = "".join(filter(str.isdigit, followers_count))
+
             inst_profile, created = InstProfile.objects.get_or_create(
                 link=profile_url, defaults={"followers_count": followers_count_numeric}
             )
+
             if not created:
                 inst_profile.followers_count = followers_count_numeric
                 inst_profile.save()
-    finally:
-        chrome_driver.quit()
+
+    except TimeoutException:
+        logger.error("Login failed. Timeout.")
+        raise
 
 
 @shared_task
@@ -101,8 +110,13 @@ def update_followers_count():
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Safari/605.1.15",
     ]
 
-    with initialize_chrome_driver() as chrome_driver:
-        login_to_instagram(chrome_driver)
+    with ChromeDriverManager() as manager:
+        chrome_driver = manager.initialize_chrome_driver()
+
+        username = config("INSTAGRAM_USERNAME")
+        password = config("INSTAGRAM_PASSWORD")
+
+        manager.login_to_instagram(username, password)
 
         try:
             inst_profiles = InstProfile.objects.all()
@@ -110,27 +124,33 @@ def update_followers_count():
             for inst_profile in inst_profiles:
                 try:
                     if inst_profile.link:
-                        user_agent = rotate_user_agent(user_agents)
+                        user_agent = manager.rotate_user_agent(user_agents)
                         chrome_driver.get(inst_profile.link)
+
                         WebDriverWait(chrome_driver, 10).until(
                             EC.presence_of_element_located((By.CLASS_NAME, "_acan"))
                         )
+
                         soup = BeautifulSoup(chrome_driver.page_source, "lxml")
                         root = html.fromstring(str(soup))
                         followers_count = root.xpath('//span[@class="_ac2a"]/@title')[0]
                         followers_count_numeric = "".join(
                             filter(str.isdigit, followers_count)
                         )
+
                         inst_profile.followers_count = followers_count_numeric
                         inst_profile.save()
+
                         InstHistory.objects.create(
                             profile=inst_profile,
                             followers_count=followers_count_numeric,
                             created_at=timezone.now(),
                         )
+
                         countdown_seconds = random.uniform(5, 10)
                         logger.info(f"Waiting for {countdown_seconds} seconds.")
                         time.sleep(countdown_seconds)
+
                     else:
                         logger.warning("Profile link is None.")
                 except TimeoutException as te:

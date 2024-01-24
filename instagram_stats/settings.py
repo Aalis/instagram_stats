@@ -32,7 +32,7 @@ SECRET_KEY = "django-insecure-0uziq(6x6i=1d$6^dl2nbzr0!*&z7^#ju+0gc((_e4k1iz@+uo
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -164,6 +164,15 @@ CELERY_TIMEZONE = "UTC"
 CELERY_BEAT_SCHEDULE = {
     "update_followers_count": {
         "task": "inst_profiles.tasks.update_followers_count",
-        "schedule": timedelta(minutes=3),  # Run every 24 hours
+        "schedule": timedelta(minutes=9),  # Run every 24 hours
     },
 }
+
+# ONLY FOR DEVELOPMENT
+CSRF_TRUSTED_ORIGINS = ["https://f7d8-213-200-38-121.ngrok-free.app"]
+if DEBUG:
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+
+# ONLY FOR DEVELOPMENT
+NGROK_URL = "https://f7d8-213-200-38-121.ngrok-free.app"
