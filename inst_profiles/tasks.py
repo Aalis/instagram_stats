@@ -128,7 +128,7 @@ def update_followers_count():
                             followers_count=followers_count_numeric,
                             created_at=timezone.now(),
                         )
-                        countdown_seconds = random.uniform(5, 15)
+                        countdown_seconds = random.uniform(5, 10)
                         logger.info(f"Waiting for {countdown_seconds} seconds.")
                         time.sleep(countdown_seconds)
                     else:
