@@ -30,6 +30,7 @@ class ChromeDriverManager:
             self.chrome_driver.quit()
 
     def initialize_chrome_driver(self, user_agent=None):
+        print("initialize_chrome_driver is called")
         if self.chrome_driver is None:
             driver_path = install_chromedriver()
             chrome_options = ChromeOptions()
