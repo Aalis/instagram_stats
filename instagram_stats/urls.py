@@ -23,5 +23,6 @@ urlpatterns = [
     path("users/", include("users.urls")),
     path("accounts/", include("django.contrib.auth.urls")),
     path("inst_profiles/", include("inst_profiles.urls")),
+    path("inst_history/", include("inst_history.urls")),
     path("", TemplateView.as_view(template_name="home.html"), name="home"),
 ]

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Profile History{% endblock title %}
+
+{% block content %}
+    <div class="container mt-4">
+        <h2>Profile History</h2>
+        <div id="followersChart"></div>
+        <a href="{% url 'instprofile_list' %}" class="btn btn-secondary mt-3">Back to Profiles</a>
+    </div>
+
+    <!-- Include Plotly.js directly from its CDN -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Retrieve data from Django template and format it for Plotly.js
+            const profileHistoryData = JSON.parse("{{ profile_history|escapejs }}");
+
+            // Extract labels (timestamps) and data points (follower counts)
+            const labels = profileHistoryData.map(entry => new Date(entry.fields.created_at));
+            const data = profileHistoryData.map(entry => entry.fields.followers_count);
+
+            // Create a Plotly.js line chart
+            const trace = {
+                x: labels,
+                y: data,
+                type: 'scatter',
+                mode: 'lines',
+                line: { color: 'rgba(75, 192, 192, 1)' },
+                name: 'Followers Count'
+            };
+
+            const layout = {
+                title: 'Profile History',
+                xaxis: { title: 'Timestamp' },
+                yaxis: { title: 'Followers Count' },
+                showlegend: true
+            };
+
+            Plotly.newPlot('followersChart', [trace], layout);
+        });
+    </script>
+    
+{% endblock content %}
